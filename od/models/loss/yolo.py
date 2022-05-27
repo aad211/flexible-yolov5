@@ -116,8 +116,6 @@ class ComputeLoss:
         lcls, lbox, lobj = torch.zeros(1, device=device), torch.zeros(1, device=device), torch.zeros(1, device=device)
         tcls, tbox, indices, anchors = self.build_targets(p, targets)  # targets
 
-        print(f"LOGGING nc: {self.nc}")
-
         # Losses
         for i, pi in enumerate(p):  # layer index, layer predictions
             b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
@@ -141,9 +139,7 @@ class ComputeLoss:
                 if self.nc > 1:  # cls loss (only if multiple classes)
                     t = torch.full_like(ps[:, 5:], self.cn, device=device)  # targets
                     t[range(n), tcls[i]] = self.cp
-                    print(f"LOGGING t: {t}")
                     lcls += self.BCEcls(ps[:, 5:], t)  # BCE
-                    print(f"LOGGING lcls: {lcls}")
 
                 # Append targets to text file
                 # with open('targets.txt', 'a') as file:
