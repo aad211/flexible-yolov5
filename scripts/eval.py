@@ -305,7 +305,7 @@ if __name__ == '__main__':
     check_requirements()
 
     if opt.task in ['val', 'test']:  # run normally
-        cuda = opt.device.type != 'cpu'
+        cuda = select_device(opt.device).type != 'cpu'
         with amp.autocast(enabled=cuda):
             test(opt.data,
                  opt.weights,
