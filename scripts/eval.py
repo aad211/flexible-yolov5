@@ -10,6 +10,7 @@ import yaml
 from tqdm import tqdm
 import sys
 sys.path.append('.')
+from torch.cuda import amp
 from od.models.modules.experimental import attempt_load
 from od import create_dataloader
 from utils.general import coco80_to_coco91_class, check_dataset, check_file, check_img_size, check_requirements, \
@@ -304,19 +305,21 @@ if __name__ == '__main__':
     check_requirements()
 
     if opt.task in ['val', 'test']:  # run normally
-        test(opt.data,
-             opt.weights,
-             opt.batch_size,
-             opt.img_size,
-             opt.conf_thres,
-             opt.iou_thres,
-             opt.save_json,
-             opt.single_cls,
-             opt.verbose,
-             save_txt=opt.save_txt | opt.save_hybrid,
-             save_hybrid=opt.save_hybrid,
-             save_conf=opt.save_conf,
-             )
+        cuda = opt.device.type != 'cpu'
+        with amp.autocast(enabled=cuda):
+            test(opt.data,
+                 opt.weights,
+                 opt.batch_size,
+                 opt.img_size,
+                 opt.conf_thres,
+                 opt.iou_thres,
+                 opt.save_json,
+                 opt.single_cls,
+                 opt.verbose,
+                 save_txt=opt.save_txt | opt.save_hybrid,
+                 save_hybrid=opt.save_hybrid,
+                 save_conf=opt.save_conf,
+                 )
 
     elif opt.task == 'speed':  # speed benchmarks
         for w in opt.weights:
