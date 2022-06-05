@@ -525,6 +525,11 @@ class SwinTransformer(nn.Module):
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]  # stochastic depth decay rule
 
         # build layers
+        num_features = [int(embed_dim * 2 ** i) for i in range(self.num_layers)]
+        # self.num_features = num_features
+        self.out_shape = {'C3_size': num_features[-3],
+                          'C4_size': num_features[-2],
+                          'C5_size': num_features[-1]}
         self.layers = nn.ModuleList()
         for i_layer in range(self.num_layers):
             layer = BasicLayer(dim=int(embed_dim * 2 ** i_layer),
