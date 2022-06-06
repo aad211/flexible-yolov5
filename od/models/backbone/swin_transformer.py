@@ -620,7 +620,6 @@ class SwinTransformer(nn.Module):
         """Forward function."""
         x = self.patch_embed(x)
 
-        Wh, Ww = x.size(2), x.size(3)
         if self.ape:
             # interpolate the position embedding to the corresponding size
             absolute_pos_embed = F.interpolate(self.absolute_pos_embed, size=(Wh, Ww), mode='bicubic')
@@ -629,19 +628,13 @@ class SwinTransformer(nn.Module):
             x = x.flatten(2).transpose(1, 2)
         x = self.pos_drop(x)
 
-        outs = []
-        for i in range(self.num_layers):
-            layer = self.layers[i]
-            x_out, H, W, x, Wh, Ww = layer(x, Wh, Ww)
+        for layer in self.layers:
+            x = layer(x)
 
-            if i in self.out_indices:
-                norm_layer = getattr(self, f'norm{i}')
-                x_out = norm_layer(x_out)
-
-                out = x_out.view(-1, H, W, self.num_features[i]).permute(0, 3, 1, 2).contiguous()
-                outs.append(out)
-
-        return outs[1:]
+        x = self.norm(x)  # B L C
+        x = self.avgpool(x.transpose(1, 2))  # B C 1
+        x = torch.flatten(x, 1)
+        return x
 
     def train(self, mode=True):
         """Convert the model into training mode while keep layers freezed."""
