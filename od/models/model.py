@@ -4,7 +4,7 @@ from torch import nn
 import math
 import yaml
 import torch
-from od.models.modules.common import Conv
+from od.models.modules.common import Conv, DWConv
 from od.models.backbone import build_backbone
 from od.models.neck import build_neck
 from od.models.head import build_head
@@ -51,12 +51,11 @@ class Model(nn.Module):
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
         print('Fusing layers... ')
-        for module in [self.backbone, self.fpn, self.pan, self.detection]:
-            for m in module.modules():
-                if type(m) is Conv and hasattr(m, 'bn'):
-                    m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
-                    delattr(m, 'bn')  # remove batchnorm
-                    m.forward = m.fuseforward  # update forward
+        for m in self.model.modules():
+            if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
+                m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
+                delattr(m, 'bn')  # remove batchnorm
+                m.forward = m.forward_fuse  # update forward
         self.info()
         return self
 
