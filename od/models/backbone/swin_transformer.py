@@ -548,7 +548,7 @@ class SwinTransformer(nn.Module):
             layer = BasicLayer(
                 dim=int(embed_dim * 2 ** i_layer),
                 input_resolution=(patches_resolution[0] // (2 ** i_layer),
-                                 patches_resolution[1] // (2 ** i_layer)),
+                                  patches_resolution[1] // (2 ** i_layer)),
                 depth=depths[i_layer],
                 num_heads=num_heads[i_layer],
                 window_size=window_size,
