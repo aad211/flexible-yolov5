@@ -21,7 +21,7 @@ class Conv(nn.Module):
         self.act = nn.SiLU() if act is True else (act if isinstance(act, nn.Module) else nn.Identity())
 
     def forward(self, x):
-        return self.act(self.bn(self.conv(x)))
+        return self.act(self.conv(x))
 
     def forward_fuse(self, x):
         return self.act(self.conv(x))
