@@ -520,12 +520,16 @@ class SwinTransformer(nn.Module):
         self.out_indices = out_indices
         self.frozen_stages = frozen_stages
 
+        self.num_features = int(embed_dim * 2 ** (self.num_layers - 1))
+        self.mlp_ratio = mlp_ratio
+
         # split image into non-overlapping patches
         self.patch_embed = PatchEmbed(
-            patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim,
+            img_size=pretrain_img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim,
             norm_layer=norm_layer if self.patch_norm else None)
-
+        num_patches = self.patch_embed.num_patches
         patches_resolution = self.patch_embed.patches_resolution
+        self.patches_resolution = patches_resolution
 
         # absolute position embedding
         if self.ape:
@@ -533,8 +537,7 @@ class SwinTransformer(nn.Module):
             patch_size = to_2tuple(patch_size)
             patches_resolution = [pretrain_img_size[0] // patch_size[0], pretrain_img_size[1] // patch_size[1]]
 
-            self.absolute_pos_embed = nn.Parameter(
-                torch.zeros(1, embed_dim, patches_resolution[0], patches_resolution[1]))
+            self.absolute_pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dim))
             trunc_normal_(self.absolute_pos_embed, std=.02)
 
         self.pos_drop = nn.Dropout(p=drop_rate)
@@ -619,13 +622,8 @@ class SwinTransformer(nn.Module):
     def forward(self, x):
         """Forward function."""
         x = self.patch_embed(x)
-
         if self.ape:
-            # interpolate the position embedding to the corresponding size
-            absolute_pos_embed = F.interpolate(self.absolute_pos_embed, size=(Wh, Ww), mode='bicubic')
-            x = (x + absolute_pos_embed).flatten(2).transpose(1, 2)  # B Wh*Ww C
-        else:
-            x = x.flatten(2).transpose(1, 2)
+            x = x + self.absolute_pos_embed
         x = self.pos_drop(x)
 
         for layer in self.layers:
