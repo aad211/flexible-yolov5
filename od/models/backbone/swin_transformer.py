@@ -525,6 +525,8 @@ class SwinTransformer(nn.Module):
             patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim,
             norm_layer=norm_layer if self.patch_norm else None)
 
+        patches_resolution = self.patch_embed.patches_resolution
+
         # absolute position embedding
         if self.ape:
             pretrain_img_size = to_2tuple(pretrain_img_size)
@@ -545,6 +547,8 @@ class SwinTransformer(nn.Module):
         for i_layer in range(self.num_layers):
             layer = BasicLayer(
                 dim=int(embed_dim * 2 ** i_layer),
+                input_resolution=(patches_resolution[0] // (2 ** i_layer),
+                                 patches_resolution[1] // (2 ** i_layer)),
                 depth=depths[i_layer],
                 num_heads=num_heads[i_layer],
                 window_size=window_size,
