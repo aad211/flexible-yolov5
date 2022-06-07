@@ -467,7 +467,7 @@ class SwinTransformer(nn.Module):
         A PyTorch impl of : `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows`  -
           https://arxiv.org/pdf/2103.14030
     Args:
-        pretrain_img_size (int): Input image size for training the pretrained model,
+        img_size (int): Input image size for training the pretrained model,
             used in absolute postion embedding. Default 224.
         patch_size (int | tuple(int)): Patch size. Default: 4.
         in_chans (int): Number of input image channels. Default: 3.
@@ -491,7 +491,7 @@ class SwinTransformer(nn.Module):
     """
 
     def __init__(self,
-                 pretrain_img_size=224,
+                 img_size=224,
                  patch_size=4,
                  in_chans=3,
                  embed_dim=96,
@@ -512,7 +512,7 @@ class SwinTransformer(nn.Module):
                  use_checkpoint=False):
         super().__init__()
 
-        self.pretrain_img_size = pretrain_img_size
+        self.img_size = img_size
         self.num_layers = len(depths)
         self.embed_dim = embed_dim
         self.ape = ape
@@ -525,7 +525,7 @@ class SwinTransformer(nn.Module):
 
         # split image into non-overlapping patches
         self.patch_embed = PatchEmbed(
-            img_size=pretrain_img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim,
+            img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim,
             norm_layer=norm_layer if self.patch_norm else None)
         num_patches = self.patch_embed.num_patches
         patches_resolution = self.patch_embed.patches_resolution
@@ -533,9 +533,9 @@ class SwinTransformer(nn.Module):
 
         # absolute position embedding
         if self.ape:
-            pretrain_img_size = to_2tuple(pretrain_img_size)
+            img_size = to_2tuple(img_size)
             patch_size = to_2tuple(patch_size)
-            patches_resolution = [pretrain_img_size[0] // patch_size[0], pretrain_img_size[1] // patch_size[1]]
+            patches_resolution = [img_size[0] // patch_size[0], img_size[1] // patch_size[1]]
 
             self.absolute_pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dim))
             trunc_normal_(self.absolute_pos_embed, std=.02)
@@ -622,16 +622,11 @@ class SwinTransformer(nn.Module):
     def forward(self, x):
         """Forward function."""
         x = self.patch_embed(x)
-
-        Wh, Ww = x.img_size
         if self.ape:
-            # interpolate the position embedding to the corresponding size
-            absolute_pos_embed = F.interpolate(self.absolute_pos_embed, size=(Wh, Ww), mode='bicubic')
-            x = (x + absolute_pos_embed).flatten(2).transpose(1, 2)  # B Wh*Ww C
-        else:
-            x = x.flatten(2).transpose(1, 2)
+            x = x + self.absolute_pos_embed
         x = self.pos_drop(x)
 
+        Wh, Ww = self.img_size
         outs = []
         for i in range(self.num_layers):
             layer = self.layers[i]
