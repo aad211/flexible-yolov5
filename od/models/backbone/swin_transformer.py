@@ -643,7 +643,8 @@ class SwinTransformer(nn.Module):
             print(f'layer{i}')
             #print(layer)
             x_out, x = layer(x)
-            print(x_out.size())
+            print(f'x_out: {x_out.size()}')
+            print(f'x_down: {x_out.size()}')
 
             if i in self.out_indices:
                 norm_layer = getattr(self, f'norm{i}')
