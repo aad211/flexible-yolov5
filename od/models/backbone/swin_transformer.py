@@ -571,11 +571,16 @@ class SwinTransformer(nn.Module):
         self.out_shape = {'C3_size': num_features[-3],
                           'C4_size': num_features[-2],
                           'C5_size': num_features[-1]}
+        print('debug')
+        print(num_features)
         # add a norm layer for each output
         for i_layer in out_indices:
             layer = norm_layer(num_features[i_layer])
             layer_name = f'norm{i_layer}'
+            print(layer_name)
+            print(layer)
             self.add_module(layer_name, layer)
+        print()
 
         self._freeze_stages()
 
@@ -626,17 +631,23 @@ class SwinTransformer(nn.Module):
             x = x + self.absolute_pos_embed
         x = self.pos_drop(x)
 
-        Wh, Ww = self.img_size
+        print('debug')
+        print(x.size())
+        print()
+
+        Wh, Ww = x.size(1), x.size(2)
         outs = []
         for i in range(self.num_layers):
             layer = self.layers[i]
-            x_out, H, W, x, Wh, Ww = layer(x, Wh, Ww)
+            x_out = layer(x)
+            print(x_out)
 
             if i in self.out_indices:
                 norm_layer = getattr(self, f'norm{i}')
+                print(norm_layer)
                 x_out = norm_layer(x_out)
 
-                out = x_out.view(-1, H, W, self.num_features[i]).permute(0, 3, 1, 2).contiguous()
+                out = x_out.view(-1, Wh, Ww, self.num_features[i]).permute(0, 3, 1, 2).contiguous()
                 outs.append(out)
 
         return outs[1:]
