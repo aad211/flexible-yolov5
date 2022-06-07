@@ -637,11 +637,13 @@ class SwinTransformer(nn.Module):
         print(x.size())
         print()
 
+        Wh, Ww = self.patches_resolution
+
         outs = []
         for i in range(self.num_layers):
             layer = self.layers[i]
             print(f'layer{i}')
-            # print(layer)
+            #print(layer)
             x_out, x = layer(x)
             print(f'x_out: {x_out.size()}')
             print(f'x_down: {x_out.size()}')
@@ -652,9 +654,8 @@ class SwinTransformer(nn.Module):
                 print(norm_layer)
                 x_out = norm_layer(x_out)
                 print(x_out.size())
-                print(x_out.permute(0, 2, 1).size())
 
-                out = x_out.view(-1, self.patches_resolution.items(), self.num_features[i]).permute(0, 3, 1, 2).contiguous()
+                out = x_out.view(-1, Wh, Ww, self.num_features[i]).permute(0, 3, 1, 2).contiguous()
                 outs.append(out)
 
         return outs[1:]
