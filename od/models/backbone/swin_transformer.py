@@ -639,7 +639,10 @@ class SwinTransformer(nn.Module):
         outs = []
         for i in range(self.num_layers):
             layer = self.layers[i]
+            print(f'layer{i}')
+            print(layer)
             x_out = layer(x)
+            print(f'output')
             print(x_out.size())
 
             if i in self.out_indices:
