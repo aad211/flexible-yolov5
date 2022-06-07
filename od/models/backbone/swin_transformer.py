@@ -654,7 +654,7 @@ class SwinTransformer(nn.Module):
                 print(x_out.size())
                 print(x_out.permute(0, 2, 1).size())
 
-                out = x_out.view(-1, self.patches_resolution, self.num_features[i]).permute(0, 3, 1, 2).contiguous()
+                out = x_out.view(-1, self.patches_resolution.items(), self.num_features[i]).permute(0, 3, 1, 2).contiguous()
                 outs.append(out)
 
         return outs[1:]
