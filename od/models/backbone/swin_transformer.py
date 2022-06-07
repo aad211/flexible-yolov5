@@ -401,9 +401,9 @@ class BasicLayer(nn.Module):
                 x = blk(x)
         if self.downsample is not None:
             x_down = self.downsample(x)
-            return x, x_down
+            return self.input_resolution, x, x_down
         else:
-            return x, x
+            return self.input_resolution, x, x
 
     def extra_repr(self) -> str:
         return f"dim={self.dim}, input_resolution={self.input_resolution}, depth={self.depth}"
@@ -637,14 +637,13 @@ class SwinTransformer(nn.Module):
         print(x.size())
         print()
 
-        Wh, Ww = self.patches_resolution
-
         outs = []
         for i in range(self.num_layers):
             layer = self.layers[i]
             print(f'layer{i}')
             #print(layer)
-            x_out, x = layer(x)
+            patch_res, x_out, x = layer(x)
+            h, w = patch_res
             print(f'x_out: {x_out.size()}')
             print(f'x_down: {x_out.size()}')
 
@@ -655,7 +654,7 @@ class SwinTransformer(nn.Module):
                 x_out = norm_layer(x_out)
                 print(x_out.size())
 
-                out = x_out.view(-1, Wh, Ww, self.num_features[i]).permute(0, 3, 1, 2).contiguous()
+                out = x_out.view(-1, h, w, self.num_features[i]).permute(0, 3, 1, 2).contiguous()
                 outs.append(out)
 
         return outs[1:]
